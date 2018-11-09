@@ -4,6 +4,11 @@ on init
     write /sys/devices/soc/1da4000.ufshc/clkgate_enable 0
     write /sys/devices/soc/1da4000.ufshc/hibern8_on_idle_enable 0
 
+    # set default schedTune value for foreground/top-app (only affects EAS)
+	write /dev/stune/foreground/schedtune.prefer_idle 1
+	write /dev/stune/top-app/schedtune.prefer_idle 1
+	write /dev/stune/top-app/schedtune.boost 10
+
     write /sys/module/lpm_levels/parameters/sleep_disabled Y
 
     # Add a cpuset for the camera daemon
@@ -23,16 +28,45 @@ on init
 	write /sys/block/sde/queue/scheduler cfq
 	write /sys/block/sde/queue/iosched/slice_idle 0
 	write /sys/block/sde/queue/read_ahead_kb 2048
-	write /sys/block/sde/queue/nr_requests 256 
+	write /sys/block/sde/queue/nr_requests 256
+
+on property:sys.usb.config=msc && property:sys.usb.configfs=1
+    write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "msc"
+    rm /config/usb_gadget/g1/configs/b.1/f1
+    rm /config/usb_gadget/g1/configs/b.1/f2
+    rm /config/usb_gadget/g1/configs/b.1/f3
+    rm /config/usb_gadget/g1/configs/b.1/f4
+    rm /config/usb_gadget/g1/configs/b.1/f5
+    rm /config/usb_gadget/g1/configs/b.1/f6
+    write /config/usb_gadget/g1/bcdDevice 0x0404
+    write /config/usb_gadget/g1/bcdUSB 0x0200
+    write /config/usb_gadget/g1/bDeviceClass 0x00
+    write /config/usb_gadget/g1/bDeviceSubClass 0x00
+    write /config/usb_gadget/g1/bDeviceProtocol 0x00
+    write /config/usb_gadget/g1/idVendor 0x2a70 # default by factory
+    write /config/usb_gadget/g1/idProduct 0x9011 # default by factory
+    write /config/usb_gadget/g1/strings/0x409/manufacturer OnePlus
+    write /config/usb_gadget/g1/strings/0x409/product OnePlus
+    write /config/usb_gadget/g1/strings/0x409/serialnumber "11223344"
+    #write /config/usb_gadget/g1/functions/mass_storage.0/lun.0/file ""
+    write /config/usb_gadget/g1/functions/mass_storage.0/lun.0/cdrom 1 # dafault value      
+    write /config/usb_gadget/g1/functions/mass_storage.0/lun.0/ro 1 # default value
+    symlink /config/usb_gadget/g1/functions/mass_storage.0 config/usb_gadget/g1/configs/b.1/f1
+    write /config/usb_gadget/g1/UDC ${sys.usb.controller}
+    setprop sys.usb.state ${sys.usb.config}
 
 on property:sys.post_boot.parsed=1
-
     # update cpusets now that processors are up
 	write /dev/cpuset/top-app/cpus 0-7
 	write /dev/cpuset/foreground/cpus 0-7
 	write /dev/cpuset/foreground/boost/cpus 0-7
 	write /dev/cpuset/background/cpus 0-7
-	write /dev/cpuset/system-background/cpus 0-7
+
+	# set default schedTune value for foreground/top-app (only affects EAS)
+	write /dev/stune/foreground/schedtune.prefer_idle 1
+	write /dev/stune/top-app/schedtune.prefer_idle 1
+	write /dev/stune/top-app/schedtune.boost 1
+	write /dev/stune/top-app/schedtune.sched_boost 0
 
     # I/O On Boot
 	write /sys/block/sda/queue/iostats 0
@@ -54,17 +88,15 @@ on property:sys.post_boot.parsed=1
     write /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq 1900800
     write /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq 1958400
 	write /sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us 1000
-	write /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us 6000
-	write /sys/devices/system/cpu/cpu4/cpufreq/schedutil/up_rate_limit_us 2000
-	write /sys/devices/system/cpu/cpu4/cpufreq/schedutil/down_rate_limit_us 6000
+	write /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us 8000
+	write /sys/devices/system/cpu/cpu4/cpufreq/schedutil/up_rate_limit_us 1000
+	write /sys/devices/system/cpu/cpu4/cpufreq/schedutil/down_rate_limit_us 8000
 
     # Input boost configuration
 	write /sys/module/cpu_boost/parameters/input_boost_freq "0:1036800"
 	write /sys/module/cpu_boost/parameters/input_boost_enabled 1
 	write /sys/module/cpu_boost/parameters/input_boost_ms 0
-
-    # Adjust LMK Values
-	write /sys/module/lowmemorykiller/parameters/minfree "18432,23040,27648,32256,55296,80640"
+    write /sys/module/cpu_boost/parameters/dynamic_stune_boost 10
 
     # Set moar writeback stuffs
     write /proc/sys/vm/dirty_ratio 20
