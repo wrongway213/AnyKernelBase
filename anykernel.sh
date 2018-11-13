@@ -4,7 +4,7 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=Krieg Kernel for the OnePlus 5/T by APOPHIS9283, wrongway213
+kernel.string=Krieg Kernel for the OnePlus 5/T by APOPHIS9283, wrongway213 & Yoinx
 do.devicecheck=1
 do.modules=0
 do.cleanup=1
