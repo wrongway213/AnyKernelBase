@@ -92,11 +92,6 @@ on property:sys.post_boot.parsed=1
 	write /sys/devices/system/cpu/cpu4/cpufreq/schedutil/up_rate_limit_us 1000
 	write /sys/devices/system/cpu/cpu4/cpufreq/schedutil/down_rate_limit_us 6000
 
-    #Input boost
-    write /sys/kernel/cpu_input_boost/ib_freqs "960000 960000"
-    write /sys/kernel/cpu_input_boost/ib_duration_ms 400
-    write /sys/kernel/cpu_input_boost/enabled 1
-
     #Enable Adaptive LMK
     write /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk 1
     
