@@ -52,8 +52,15 @@ case "$userflavor" in
 esac;
 ui_print " ";
 ui_print "You are on $os_string!";
-if [ -f /tmp/anykernel/kernels/$os/Image.gz-dtb ]; then
-  mv /tmp/anykernel/kernels/$os/Image.gz-dtb /tmp/anykernel/Image.gz-dtb;
+
+# Detect if treble
+case $(file_getprop /system/build.prop "ro.treble.enabled") in
+  "true") tre=treble; ui_print "Treble rom detected!";;
+  "false") tre=nontreble;;
+esac
+
+if [ -f /tmp/anykernel/kernels/$os/$tre/Image.gz-dtb ]; then
+  mv /tmp/anykernel/kernels/$os/$tre/Image.gz-dtb /tmp/anykernel/Image.gz-dtb;
 else
   die "There is no kernel for your OS in this zip! Aborting...";
 fi;
