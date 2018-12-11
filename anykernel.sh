@@ -56,7 +56,7 @@ ui_print "You are on $os_string!";
 # Detect if treble
 case $(file_getprop /system/build.prop "ro.treble.enabled") in
   "true") tre=treble; ui_print "Treble rom detected!";;
-  "false") tre=nontreble;;
+  *) tre=nontreble;;
 esac
 
 if [ -f /tmp/anykernel/kernels/$os/$tre/Image.gz-dtb ]; then
