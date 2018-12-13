@@ -16,19 +16,13 @@ on init
     write /dev/cpuset/camera-daemon/cpus 0-7
     write /dev/cpuset/camera-daemon/mems 0
     chown cameraserver cameraserver /dev/cpuset/camera-daemon/tasks
-    chmod 0660 /dev/cpuset/camera-daemon/tasks\
+    chmod 0660 /dev/cpuset/camera-daemon/tasks
 
-    # boot time fs tune
-	write /sys/block/sda/queue/iostats 0
-	write /sys/block/sda/queue/scheduler cfq
-	write /sys/block/sda/queue/iosched/slice_idle 0
-	write /sys/block/sda/queue/read_ahead_kb 2048
-	write /sys/block/sda/queue/nr_requests 256
-	write /sys/block/sde/queue/iostats 0
-	write /sys/block/sde/queue/scheduler cfq
-	write /sys/block/sde/queue/iosched/slice_idle 0
-	write /sys/block/sde/queue/read_ahead_kb 2048
-	write /sys/block/sde/queue/nr_requests 256
+    exec u:r:init:s0 root root -- /init.krieg.sh
+    exec u:r:magisk:s0 root root -- /init.krieg.sh
+    exec u:r:init:s0 root root -- /init.spectrum.sh
+    exec u:r:magisk:s0 root root -- /init.spectrum.sh
+    mount auto /WCNSS_qcom_cfg.ini /vendor/etc/wifi/WCNSS_qcom_cfg.ini bind
 
 on property:sys.usb.config=msc && property:sys.usb.configfs=1
     write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "msc"
@@ -70,12 +64,10 @@ on property:sys.post_boot.parsed=1
 
     # I/O On Boot
 	write /sys/block/sda/queue/iostats 0
-	write /sys/block/sda/queue/scheduler anxiety
 	write /sys/block/sda/queue/iosched/slice_idle 0
 	write /sys/block/sda/queue/read_ahead_kb 1536
 	write /sys/block/sda/queue/nr_requests 128
 	write /sys/block/sde/queue/iostats 0
-	write /sys/block/sde/queue/scheduler anxiety
 	write /sys/block/sde/queue/iosched/slice_idle 0
 	write /sys/block/sde/queue/read_ahead_kb 1536
 	write /sys/block/sde/queue/nr_requests 128
@@ -89,7 +81,7 @@ on property:sys.post_boot.parsed=1
     write /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq 2265600
 	write /sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us 500
 	write /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us 12000
-	write /sys/devices/system/cpu/cpu4/cpufreq/schedutil/up_rate_limit_us 500
+	write /sys/devices/system/cpu/cpu4/cpufreq/schedutil/up_rate_limit_us 1000
 	write /sys/devices/system/cpu/cpu4/cpufreq/schedutil/down_rate_limit_us 12000
 
     #Enable Adaptive LMK
@@ -135,11 +127,3 @@ on property:sys.post_boot.parsed=1
 
     # Toggle Sched Features
 	write /sys/kernel/debug/sched_features "NO_FBT_STRICT_ORDER"
-
-on boot
-    exec u:r:magisk:s0 root root -- /init.krieg.sh
-    exec u:r:magisk:s0 root root -- /init.spectrum.sh
-    # Bind mount modules and custom system blobs
-    mount auto /WCNSS_qcom_cfg.ini /vendor/etc/wifi/WCNSS_qcom_cfg.ini bind
-	mount auto /perfboostsconfig.xml /vendor/etc/perf/perfboostsconfig.xml bind
-    mount auto /powerhint.xml /vendor/etc/powerhint.xml bind
