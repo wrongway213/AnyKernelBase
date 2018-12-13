@@ -30,20 +30,23 @@ ramdisk_compression=auto;
 chmod -R 750 $ramdisk/*;
 find $ramdisk -type f -exec chmod 644 {} \;
 chown -R root:root $ramdisk/*;
+rm -rf $ramdisk/modules
+
+# Print message and exit
+die() {
+  ui_print " "; ui_print "$*";
+  exit 1;
+}
 
 # Select the correct image to flash
 userflavor="$(file_getprop /system/build.prop "ro.build.user"):$(file_getprop /system/build.prop "ro.build.flavor")";
 case "$userflavor" in
   "OnePlus:OnePlus5-user"|"OnePlus:OnePlus5T-user")
-    os="oos";
-    os_string="OxygenOS";;
+    die "OOS detected! This kernel is for custom roms only!";;
   *)
-    os="custom";
-    os_string="a custom ROM";;
+    os="custom";;
 esac;
 ui_print " ";
-ui_print "You are on $os_string!";
-
 # Detect if treble
 case $(file_getprop /system/build.prop "ro.treble.enabled") in
   "true") tre=treble; ui_print "Treble rom detected!";;
@@ -73,6 +76,4 @@ insert_line init.rc "init.spectrum.rc" after "import /init.krieg.rc" "import /in
 # end ramdisk changes
 write_boot;
 
-
 ## end install
-
