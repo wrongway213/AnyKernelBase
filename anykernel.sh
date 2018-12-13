@@ -4,7 +4,7 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=Krieg Kernel for the OnePlus 5/T by APOPHIS9283, wrongway213 & Yoinx
+kernel.string=Krieg Kernel - OnePlus 5/T by APOPHIS9283, wrongway213, Yoinx, REV3NT3CH & ViRb3
 do.devicecheck=1
 do.modules=0
 do.cleanup=1
@@ -21,24 +21,15 @@ block=/dev/block/bootdevice/by-name/boot;
 is_slot_device=0;
 ramdisk_compression=auto;
 
-
 ## AnyKernel methods (DO NOT CHANGE)
 # import patching functions/variables - see for reference
 . /tmp/anykernel/tools/ak2-core.sh;
-
 
 ## AnyKernel file attributes
 # set permissions/ownership for included ramdisk files
 chmod -R 750 $ramdisk/*;
 find $ramdisk -type f -exec chmod 644 {} \;
 chown -R root:root $ramdisk/*;
-
-# Print message and exit
-die() {
-  ui_print " "; ui_print "$*";
-  exit 1;
-}
-
 
 # Select the correct image to flash
 userflavor="$(file_getprop /system/build.prop "ro.build.user"):$(file_getprop /system/build.prop "ro.build.flavor")";
@@ -71,56 +62,14 @@ find $ramdisk/krieg -name "*.sh" -exec chmod 750 {} \;
 ## AnyKernel install
 dump_boot;
 
-# begin ramdisk changes
-
 # Set the default background app limit to 60
 insert_line default.prop "ro.sys.fw.bg_apps_limit=60" before "ro.secure=1" "ro.sys.fw.bg_apps_limit=60";
 
 # Import init.krieg.rc file
+remove_line init.rc "import /init.krieg.rc"
 insert_line init.rc "init.krieg.rc" after "import /init.usb.rc" "import /init.krieg.rc";
 
-# If on OOS, we need the support to load the Wi-Fi module
-if [ "$os" == "oos" ]; then
-  # sepolicy
-  $bin/magiskpolicy --load sepolicy --save sepolicy \
-    "allow init rootfs file execute_no_trans" \
-    "allow { init modprobe } rootfs system module_load" \
-    "allow init { system_file vendor_file vendor_configs_file } file mounton" \
-  ;
-
-  # sepolicy_debug
-  $bin/magiskpolicy --load sepolicy_debug --save sepolicy_debug \
-    "allow init rootfs file execute_no_trans" \
-    "allow { init modprobe } rootfs system module_load" \
-    "allow init { system_file vendor_file vendor_configs_file } file mounton" \
-  ;
-
-  # Patch init.krieg.rc to bind mount the Wi-Fi module on OxygenOS
-  prepend_file init.krieg.rc "modules" modules;
-
-  # Remove recovery service so that TWRP isn't overwritten
-  remove_section init.rc "service flash_recovery" ""
-
-  # Remove suspicious OnePlus services
-  remove_section init.oem.rc "service OPNetlinkService" ""
-  remove_section init.oem.rc "service wifisocket" ""
-  remove_section init.oem.rc "service oemsysd" ""
-  remove_section init.oem.rc "service oem_audio_device" "oneshot"
-  remove_section init.oem.rc "service atrace" "seclabel"
-  remove_section init.oem.rc "service sniffer_set" ""
-  remove_section init.oem.rc "service sniffer_start" ""
-  remove_section init.oem.rc "service sniffer_stop" "seclabel"
-  remove_section init.oem.rc "service tcpdump-service" ""
-  remove_section init.oem.debug.rc "service oemlogkit" ""
-  remove_section init.oem.debug.rc "service dumpstate_log" ""
-  remove_section init.oem.debug.rc "service oemasserttip" ""
-else
-  # Otherwise, just remove it
-  rm -rf $ramdisk/modules
-fi;
-
 # end ramdisk changes
-
 write_boot;
 
 
